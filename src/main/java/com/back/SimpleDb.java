@@ -22,7 +22,6 @@ public class SimpleDb {
     private boolean mode;
 
     public SimpleDb(String host, String user, String password, String dbName) {
-
         this.url = "jdbc:mysql://" + host + "/" + dbName + "?serverTimezone=Asia/Seoul";
         this.user = user;
         this.password = password;
@@ -35,6 +34,7 @@ public class SimpleDb {
     }
 
 
+    // SQL 한번 실행
     public void run(String sql, Object ... values) {
         try (
             Connection conn = DriverManager.getConnection(url, user, password);
@@ -51,6 +51,7 @@ public class SimpleDb {
 
     }
 
+    // sql 객체 반환
     public Sql genSql() {
         try {
             return new Sql(DriverManager.getConnection(url, user, password));
