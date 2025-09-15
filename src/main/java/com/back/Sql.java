@@ -1,5 +1,7 @@
 package com.back;
 
+import org.springframework.validation.ObjectError;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -156,6 +158,26 @@ public class Sql {
                 if(rs.next()) {
                     Object value = rs.getObject(1);
                     return value == null? null : value.toString(); // 원하는 제목이 없는 경우 null, 있는 경우 제목 그대로 출력
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close();
+        }
+    }
+
+    public Boolean selectBoolean() {
+        try(PreparedStatement ps = connection.prepareStatement(sb.toString())) { // 현재 누적된 SQL 실행
+            bind(ps);
+            try(ResultSet rs = ps.executeQuery()) { // 맨 첫 행 이동
+                if(rs.next()) {
+                    Object value = rs.getObject(1);
+                    if(value == null) return null; //null인지 확인
+                    if(value instanceof Boolean) return (Boolean) value; // boolean인지 확인
+                    if(value instanceof Number) return ((Number) value).intValue() != 0; // BIT(), TINYINT()로 저장된 경우 -> Boolean 변환
+                    return Boolean.parseBoolean(value.toString());
                 }
                 return null;
             }
