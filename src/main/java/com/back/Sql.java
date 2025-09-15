@@ -1,6 +1,7 @@
 package com.back;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,17 +96,17 @@ public class Sql {
     public List<Map<String, Object>> selectRows() {
         List<Map<String, Object>> results = new ArrayList<>();
         try (PreparedStatement ps =
-                     connection.prepareStatement(sb.toString())) {
-            bind(ps);
-            try (ResultSet rs = ps.executeQuery()) {
+                     connection.prepareStatement(sb.toString())) { //append로 모인 SQL문
+            bind(ps); // append 호출 시 추가했던 ?를 바인드
+            try (ResultSet rs = ps.executeQuery()) { // 결과 반환
                 ResultSetMetaData meta = rs.getMetaData();
                 int columnCount = meta.getColumnCount();
                 while(rs.next()) {
                     Map<String, Object> row = new HashMap<>();
                     for (int i = 1; i <= columnCount; i++) {
-                        row.put(meta.getColumnLabel(i), rs.getObject(i));
+                        row.put(meta.getColumnLabel(i), rs.getObject(i)); //컬럼에 실제 값을 넣는 상황
                     }
-                    results.add(row);
+                    results.add(row); // 다 넣고 리스트에 추가
                 }
             }
         } catch (SQLException e) {
@@ -124,6 +125,10 @@ public class Sql {
             return null;
         }
 
-        return row.get(0);
+        return row.get(0); //원하는 행 가지고 오기
+    }
+
+    public LocalDateTime selectDatetime() {
+        return LocalDateTime.now();
     }
 }
