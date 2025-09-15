@@ -2,7 +2,9 @@ package com.back;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Sql {
@@ -27,7 +29,6 @@ public class Sql {
 
     PreparedStatement란?
     JDBC에서 SQL을 실행할 때 사용하는 미리 컴파일된 SQL 객체
-
 
      */
     public long insert() {
@@ -67,4 +68,62 @@ public class Sql {
         try { connection.close(); } catch (SQLException ignore) {}
     }
 
+    public int update() {
+        try (PreparedStatement ps =
+                     connection.prepareStatement(sb.toString())) {
+            bind(ps);
+            return ps.executeUpdate(); // 수정된 row 갯수 밴환
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close();
+        }
+    }
+
+    public int delete() {
+        try (PreparedStatement ps =
+                     connection.prepareStatement(sb.toString())) {
+            bind(ps);
+            return ps.executeUpdate(); // 삭제된 row 갯수 밴환
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close();
+        }
+    }
+
+    public List<Map<String, Object>> selectRows() {
+        List<Map<String, Object>> results = new ArrayList<>();
+        try (PreparedStatement ps =
+                     connection.prepareStatement(sb.toString())) {
+            bind(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                ResultSetMetaData meta = rs.getMetaData();
+                int columnCount = meta.getColumnCount();
+                while(rs.next()) {
+                    Map<String, Object> row = new HashMap<>();
+                    for (int i = 1; i <= columnCount; i++) {
+                        row.put(meta.getColumnLabel(i), rs.getObject(i));
+                    }
+                    results.add(row);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close();
+        }
+
+        return results;
+    }
+
+    public Map<String, Object> selectRow() {
+        List<Map<String, Object>> row = selectRows();
+
+        if(row.isEmpty()) {
+            return null;
+        }
+
+        return row.get(0);
+    }
 }
