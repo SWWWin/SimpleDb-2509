@@ -323,47 +323,47 @@ public class SimpleDbTest {
         assertThat(count).isEqualTo(3);
     }
 
-//    @Test
-//    @DisplayName("appendIn")
-//    public void t013() {
-//        Sql sql = simpleDb.genSql();
-//        /*
-//        == rawSql ==
-//        SELECT COUNT(*)
-//        FROM article
-//        WHERE id IN ('1', '2', '3')
-//        */
-//        sql.append("SELECT COUNT(*)")
-//                .append("FROM article")
-//                .appendIn("WHERE id IN (?)", 1, 2, 3);
-//
-//        long count = sql.selectLong();
-//
-//        assertThat(count).isEqualTo(3);
-//    }
-//
-//    @Test
-//    @DisplayName("selectLongs, ORDER BY FIELD 사용법")
-//    public void t014() {
-//        Long[] ids = new Long[]{2L, 1L, 3L};
-//
-//        Sql sql = simpleDb.genSql();
-//        /*
-//        SELECT id
-//        FROM article
-//        WHERE id IN ('2', '3', '1')
-//        ORDER BY FIELD (id, '2', '3', '1')
-//        */
-//        sql.append("SELECT id")
-//                .append("FROM article")
-//                .appendIn("WHERE id IN (?)", ids)
-//                .appendIn("ORDER BY FIELD (id, ?)", ids);
-//
-//        List<Long> foundIds = sql.selectLongs();
-//
-//        assertThat(foundIds).isEqualTo(Arrays.stream(ids).toList());
-//    }
-//
+    @Test
+    @DisplayName("appendIn")
+    public void t013() {
+        Sql sql = simpleDb.genSql();
+        /*
+        == rawSql ==
+        SELECT COUNT(*)
+        FROM article
+        WHERE id IN ('1', '2', '3')
+        */
+        sql.append("SELECT COUNT(*)")
+                .append("FROM article")
+                .appendIn("WHERE id IN (?)", 1, 2, 3);
+
+        long count = sql.selectLong();
+
+        assertThat(count).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("selectLongs, ORDER BY FIELD 사용법")
+    public void t014() {
+        Long[] ids = new Long[]{2L, 1L, 3L};
+
+        Sql sql = simpleDb.genSql();
+        /*
+        SELECT id
+        FROM article
+        WHERE id IN ('2', '3', '1')
+        ORDER BY FIELD (id, '2', '3', '1')
+        */
+        sql.append("SELECT id")
+                .append("FROM article")
+                .appendIn("WHERE id IN (?)", ids)
+                .appendIn("ORDER BY FIELD (id, ?)", ids);
+
+        List<Long> foundIds = sql.selectLongs();
+
+        assertThat(foundIds).isEqualTo(Arrays.stream(ids).toList());
+    }
+
 //    @Test
 //    @DisplayName("selectRows, Article")
 //    public void t015() {

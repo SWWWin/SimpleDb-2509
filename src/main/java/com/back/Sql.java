@@ -187,4 +187,45 @@ public class Sql {
             close();
         }
     }
+
+    public Sql appendIn(String part, Object ... values) {
+        if (values == null || values.length == 0) //null 처리
+            throw new IllegalArgumentException("Values required");
+
+
+        // ?를 values,length만큼 만들어서 치환
+        StringBuilder placeHolders = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            if(i > 0) placeHolders.append(", ");
+            placeHolders.append("?");
+            this.params.add(values[i]);
+        }
+
+        if(sb.length() > 0) sb.append(" "); //공백 추가
+        //part 문자열에 있는 ? 하나를 (?, ?, ...) 형태로 바꿔줌
+        sb.append(part.replace("?", placeHolders.toString()));
+
+
+        return this;
+
+
+    }
+
+    public List<Long> selectLongs() {
+        List<Long> results = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sb.toString())) {
+            bind(ps);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Object value = rs.getObject(1);
+                    results.add(value == null ? null : ((Number) value).longValue());
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close();
+        }
+        return results;
+    }
 }
