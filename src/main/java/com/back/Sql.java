@@ -138,7 +138,7 @@ public class Sql {
             try(ResultSet rs = ps.executeQuery()) { // 맨 첫 행 이동
                 if(rs.next()) {
                     Object value = rs.getObject(1);
-                    return value == null? null : ((Number) value).longValue();
+                    return value == null? null : ((Number) value).longValue(); // 원하는 id가 없는 경우 null, 있는 경우 출력
                 }
                 return null;
             }
@@ -150,5 +150,19 @@ public class Sql {
     }
 
     public String selectString() {
+        try(PreparedStatement ps = connection.prepareStatement(sb.toString())) { // 현재 누적된 SQL 실행
+            bind(ps);
+            try(ResultSet rs = ps.executeQuery()) { // 맨 첫 행 이동
+                if(rs.next()) {
+                    Object value = rs.getObject(1);
+                    return value == null? null : value.toString(); // 원하는 제목이 없는 경우 null, 있는 경우 제목 그대로 출력
+                }
+                return null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close();
+        }
     }
 }
