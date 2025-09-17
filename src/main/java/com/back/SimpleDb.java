@@ -18,6 +18,8 @@ public class SimpleDb {
     private final String password;
     private boolean mode;
 
+    private Connection txConnection = null;
+
     public SimpleDb(String host, String user, String password, String dbName) {
         this.url = "jdbc:mysql://" + host + "/" + dbName + "?serverTimezone=Asia/Seoul";
         this.user = user;
@@ -56,4 +58,50 @@ public class SimpleDb {
             throw new RuntimeException(e);
         }
     }
+
+
+
+    public void close() {
+        try {
+            if (txConnection != null && !txConnection.isClosed()) {
+                txConnection.close();
+                txConnection = null;
+            }
+        } catch (SQLException ignore) {}
+    }
+
+    // 트랜잭션 시작
+    public void startTransaction() {
+        try {
+            txConnection = DriverManager.getConnection(url, user, password);
+            txConnection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void commit() {
+        try {
+            if(txConnection != null) {
+                txConnection.commit();
+                txConnection.close();
+                txConnection = null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void rollback() {
+        try {
+            if(txConnection != null) {
+                txConnection.rollback();
+                txConnection.close();
+                txConnection = null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }

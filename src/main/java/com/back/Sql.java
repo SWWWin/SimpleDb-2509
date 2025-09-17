@@ -23,6 +23,8 @@ public class Sql {
         return this;
     }
 
+
+
     /*
     DriverManager → Connection → Statement/PreparedStatement → (파라미터 바인딩) →
     실행(executeQuery / executeUpdate) → ResultSet(SELECT 시) → 자원 해제 순서로 실행
@@ -64,8 +66,12 @@ public class Sql {
         }
     }
 
-    private void close() {
-        try { connection.close(); } catch (SQLException ignore) {}
+    public void close() {
+        try {
+            if(connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException ignore) {}
     }
 
     public int update() {
