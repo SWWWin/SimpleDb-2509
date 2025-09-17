@@ -1,13 +1,10 @@
 package com.back;
 
-import org.springframework.validation.ObjectError;
-
+import java.lang.reflect.Field;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class Sql {
@@ -95,39 +92,58 @@ public class Sql {
         }
     }
 
-    public List<Map<String, Object>> selectRows() {
-        List<Map<String, Object>> results = new ArrayList<>();
-        try (PreparedStatement ps =
-                     connection.prepareStatement(sb.toString())) { //append로 모인 SQL문
-            bind(ps); // append 호출 시 추가했던 ?를 바인드
-            try (ResultSet rs = ps.executeQuery()) { // 결과 반환
+
+    public <T> T selectRow(Class<T> clazz) {
+        List<T> rows = selectRows(clazz);
+        return rows.isEmpty() ? null : rows.get(0);//원하는 행 가지고 오기
+    }
+
+
+    public <T> List<T> selectRows(Class<T> clazz) {
+        List<T> results = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sb.toString())) {
+            bind(ps);
+            try (ResultSet rs = ps.executeQuery()) {
                 ResultSetMetaData meta = rs.getMetaData();
                 int columnCount = meta.getColumnCount();
-                while(rs.next()) {
-                    Map<String, Object> row = new HashMap<>();
+
+                while (rs.next()) {
+                    T obj = clazz.getDeclaredConstructor().newInstance();
                     for (int i = 1; i <= columnCount; i++) {
-                        row.put(meta.getColumnLabel(i), rs.getObject(i)); //컬럼에 실제 값을 넣는 상황
+                        String column = meta.getColumnLabel(i);
+                        Object value = rs.getObject(i);
+                        String fieldName = toCamelCase(column);
+                        try {
+                            Field field = clazz.getDeclaredField(fieldName);
+                            field.setAccessible(true);
+                            if (value instanceof Timestamp ts
+                                    && field.getType().equals(LocalDateTime.class)) {
+                                field.set(obj, ts.toLocalDateTime());
+                            } else {
+                                field.set(obj, value);
+                            }
+                        } catch (NoSuchFieldException ignore) {}
                     }
-                    results.add(row); // 다 넣고 리스트에 추가
+                    results.add(obj);
                 }
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             close();
         }
-
         return results;
     }
 
-    public Map<String, Object> selectRow() {
-        List<Map<String, Object>> row = selectRows();
-
-        if(row.isEmpty()) {
-            return null;
+    private String toCamelCase(String name) {
+        StringBuilder sb = new StringBuilder();
+        boolean upper = false;
+        for (char c : name.toCharArray()) {
+            if (c == '_') { upper = true; continue; }
+            sb.append(upper ? Character.toUpperCase(c) : Character.toLowerCase(c));
+            upper = false;
         }
-
-        return row.get(0); //원하는 행 가지고 오기
+        return sb.toString();
     }
 
     public LocalDateTime selectDatetime() {
