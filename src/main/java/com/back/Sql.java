@@ -95,6 +95,7 @@ public class Sql {
         }
     }
 
+
     public List<Map<String, Object>> selectRows() {
         List<Map<String, Object>> results = new ArrayList<>();
         try (PreparedStatement ps =
@@ -117,6 +118,35 @@ public class Sql {
             close();
         }
 
+        return results;
+    }
+
+    public List<Article> selectRows(Class<Article> articleClass) {
+        List<Article> results = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(sb.toString())) {
+            // PreparedStatement에 파라미터 바인딩
+            bind(ps);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Article article = new Article();
+
+                    // 컬럼별로 값을 세팅
+                    article.setId(rs.getLong("id"));
+                    article.setTitle(rs.getString("title"));
+                    article.setBody(rs.getString("body"));
+                    article.setCreatedDate(rs.getTimestamp("createdDate").toLocalDateTime());
+                    article.setModifiedDate(rs.getTimestamp("modifiedDate").toLocalDateTime());
+                    article.setBlind(rs.getBoolean("isBlind"));
+
+                    results.add(article);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } finally {
+            close(); // autoClose가 true면 커넥션 닫힘
+        }
         return results;
     }
 
@@ -228,4 +258,6 @@ public class Sql {
         }
         return results;
     }
+
+
 }
