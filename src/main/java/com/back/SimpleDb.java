@@ -112,4 +112,14 @@ public class SimpleDb {
             throw new RuntimeException("트랜잭션 롤백 오류: " + e.getMessage(), e);
         }
     }
+
+    public void commit() {
+        try {
+            if(txConnection != null && !txConnection.isClosed()) { //현재 연결 중이라면 롤백 후 연결을 끊어낸다
+                txConnection.commit();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("트랜잭션 커밋 오류: " + e.getMessage(), e);
+        }
+    }
 }
