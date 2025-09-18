@@ -88,8 +88,28 @@ public class SimpleDb {
 
 
     public void startTransaction() {
+        try {
+            // txConnection이 없거나 닫혀 있으면 새로 연결 생성
+            if (txConnection == null || txConnection.isClosed()) {
+                txConnection = DriverManager.getConnection(url, user, password);
+                txConnection.setAutoCommit(false); // 트랜잭션 모드로 설정
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("트랜잭션 시작 오류: " + e.getMessage(), e);
+        }
     }
 
+
+
     public void rollback() {
+        try {
+            if(txConnection != null && !txConnection.isClosed()) { //현재 연결 중이라면 롤백 후 연결을 끊어낸다
+                txConnection.rollback();
+                txConnection.close();
+                txConnection = null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("트랜잭션 롤백 오류: " + e.getMessage(), e);
+        }
     }
 }
