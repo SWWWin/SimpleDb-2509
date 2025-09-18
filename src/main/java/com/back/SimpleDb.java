@@ -18,6 +18,16 @@ public class SimpleDb {
     private final String password;
     private boolean mode;
 
+    /*
+    DB와 직접 통신하려면 매번 연결을 새로 해야 한다
+    그 과정은 소켓 연결 -> 로그인 인증 -> 세선 생성이므로 매번 새로 연결하려면 시간이 걸린다
+    따라서 Connection을 재사용하는 것이 중요하다
+
+    트랜잭션 내에서는 Connection을 계속 사용해야 한다
+     */
+    private Connection txConnection = null;
+
+
     public SimpleDb(String host, String user, String password, String dbName) {
         this.url = "jdbc:mysql://" + host + "/" + dbName + "?serverTimezone=Asia/Seoul";
         this.user = user;
@@ -51,9 +61,35 @@ public class SimpleDb {
     // sql 객체 반환
     public Sql genSql() {
         try {
-            return new Sql(DriverManager.getConnection(url, user, password));
+            if(txConnection != null && !txConnection.isClosed()) {
+                //트랜잭션 중이면 닫지 않도록 autoClose = false
+                return new Sql(txConnection, false);
+            }
+            else {
+                //트랜잭션 중이 아니라면 단발성으로
+                return new Sql(DriverManager.getConnection(url, user, password), true);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    //트랜잭션 커넥션 무조건 종료
+    public void close() {
+        try {
+            if (txConnection != null && !txConnection.isClosed()) {
+                txConnection.close();
+                txConnection = null;
+            }
+        } catch (SQLException ignore) {}
+    }
+
+    // ====트랜잭션 처리====
+
+
+    public void startTransaction() {
+    }
+
+    public void rollback() {
     }
 }

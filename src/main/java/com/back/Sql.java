@@ -14,9 +14,11 @@ public class Sql {
     private final Connection connection;
     private final StringBuilder sb = new StringBuilder();
     private final List<Object> params = new ArrayList<>();
+    private final boolean autoClose;
 
-    public Sql(Connection connection) {
+    public Sql(Connection connection, boolean autoClose) {
         this.connection = connection;
+        this.autoClose = autoClose;
     }
 
     public Sql append(String part, Object... values) {
@@ -68,7 +70,11 @@ public class Sql {
     }
 
     private void close() {
-        try { connection.close(); } catch (SQLException ignore) {}
+        if(!autoClose) return; //트랜잭션이 끝나지 않았다면 닫지 않는다
+        try{
+            if(connection != null && ! connection.isClosed())
+                connection.close();
+        } catch (SQLException e) {}
     }
 
     public int update() {
@@ -95,6 +101,7 @@ public class Sql {
         }
     }
 
+    //파라미터가 없는 버전
 
     public List<Map<String, Object>> selectRows() {
         List<Map<String, Object>> results = new ArrayList<>();
@@ -120,6 +127,19 @@ public class Sql {
 
         return results;
     }
+
+
+    public Map<String, Object> selectRow() {
+        List<Map<String, Object>> row = selectRows();
+
+        if(row.isEmpty()) {
+            return null;
+        }
+
+        return row.get(0); //원하는 행 가지고 오기
+    }
+
+    // 파라미터가 있는 버전
 
     public List<Article> selectRows(Class<Article> articleClass) {
         List<Article> results = new ArrayList<>();
@@ -150,14 +170,10 @@ public class Sql {
         return results;
     }
 
-    public Map<String, Object> selectRow() {
-        List<Map<String, Object>> row = selectRows();
 
-        if(row.isEmpty()) {
-            return null;
-        }
-
-        return row.get(0); //원하는 행 가지고 오기
+    public Article selectRow(Class<Article> articleClass) {
+        List<Article> articles = selectRows(articleClass); // 파라미터가 있는 경우 사용
+        return articles.isEmpty() ? null : articles.get(0);
     }
 
     public LocalDateTime selectDatetime() {
@@ -258,6 +274,7 @@ public class Sql {
         }
         return results;
     }
+
 
 
 }
